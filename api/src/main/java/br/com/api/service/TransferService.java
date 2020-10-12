@@ -1,34 +1,28 @@
 package br.com.api.service;
 
 import br.com.api.dto.TransacaoDto;
+import br.com.api.dto.TransferDto;
 import br.com.api.model.Conta;
 import br.com.api.model.Transacao;
+import br.com.api.repository.ContaRepository;
 import br.com.api.repository.TransacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import br.com.api.repository.ContaRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Service
-public class ContaService {
+public class TransferService {
 
     private final ContaRepository contaRepository;
     private final TransacaoRepository transacaoRepository;
 
     @Autowired
-    public ContaService(ContaRepository contaRepository, TransacaoRepository transacaoRepository) {
+    public TransferService(ContaRepository contaRepository, TransacaoRepository transacaoRepository) {
         this.contaRepository = contaRepository;
         this.transacaoRepository = transacaoRepository;
-    }
-
-    public List<Conta> listAll() {
-        return contaRepository.findAll();
-    }
-
-    public Conta findById(Long idConta) {
-        return contaRepository.findById(idConta).orElseThrow(() -> new RuntimeException("Not Found"));
     }
 
     public Conta findByHash(String hash) {
@@ -42,7 +36,7 @@ public class ContaService {
 
     public Conta save(TransacaoDto request, String hash) {
 
-        Conta conta = findByHash(hash);
+        Conta conta = contaRepository.findByHash(hash).orElseThrow(() -> new RuntimeException("Not Found"));
 
         Double valor= request.getValor();
 
@@ -68,12 +62,25 @@ public class ContaService {
         return contaRepository.save(conta);
     }
 
-    public Conta criarConta() {
-        Conta newConta = new Conta();
-        //cria um hash a partir do timestamp da criacao da conta
-        newConta.setHash(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-        newConta.setSaldo(0d);
-        //Outro opção - UUID.randomUUID().toString()
-        return contaRepository.save(newConta);
+    public void transferExec(TransferDto transfer) {
+        //Verifica se as contas existem
+        Conta contaDebito = contaRepository.findByHash(transfer.getContaDebito()).orElseThrow(() -> new RuntimeException("contaDebito Not Found"));
+        Conta contaCredito = contaRepository.findByHash(transfer.getContaCredito()).orElseThrow(() -> new RuntimeException("contaCredito Not Found"));
+
+        //Verifica se a conta de debito tem saldo
+        if(contaDebito.getSaldo() < transfer.getValor()){
+            new RuntimeException("Saldo insuficiente...");
+        }
+
+        //executa o debito e o credito
+        TransacaoDto debito = new TransacaoDto();
+        debito.setOperacao("saque");
+        debito.setValor(transfer.getValor());
+        save(debito,transfer.getContaDebito());
+
+        TransacaoDto credito = new TransacaoDto();
+        credito.setOperacao("deposito");
+        credito.setValor(transfer.getValor());
+        save(credito,transfer.getContaCredito());
     }
 }

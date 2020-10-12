@@ -19,36 +19,41 @@ public class ContaController {
     @Autowired
     ContaService contaService;
 
-
     @GetMapping(produces={MediaType.APPLICATION_JSON_VALUE})
     @ApiOperation(value="Lista as contas disponíveis.", produces="application/json")
     public List<Conta> listAll(){
         return contaService.listAll();
     }
 
-    @PostMapping(path = "/{idConta}",
+    @PostMapping(path = "/{hash}",
             consumes={MediaType.APPLICATION_JSON_VALUE},
             produces={MediaType.APPLICATION_JSON_VALUE})
     @ApiOperation(value="Insere operação a conta.", produces="application/json")
 
     public Conta addTransacao(
-            @ApiParam(name="idConta", required=true, value="ID de conta", example="1")
-            @PathVariable Long idConta,
+            @ApiParam(name="hash", required=true, value="Hash de conta", example="1")
+            @PathVariable String hash,
             @ApiParam(name="request", required=true, value="Objeto com as reservas a serem criadas/atualizadas")
             @Valid @RequestBody TransacaoDto request
             ){
 
-            return contaService.save(request,idConta);
-
+            return contaService.save(request,hash);
     }
 
-
-    @GetMapping(path = "/{idConta}/saldos",
+    @GetMapping(path = "/{hash}/saldos",
             consumes={MediaType.APPLICATION_JSON_VALUE},
             produces={MediaType.APPLICATION_JSON_VALUE})
     @ApiOperation(value="Retorna.", produces="application/json")
-    public void getSaldo(@ApiParam(name="idConta", required=true, value="ID de conta", example="1") @PathVariable Long idConta){
-        contaService.getSaldo(idConta);
+    public Double getSaldo(@ApiParam(name="hash", required=true, value="Hash de conta", example="1") @PathVariable String hash){
+        return contaService.getSaldo(hash);
+    }
+
+    @PostMapping(consumes={MediaType.APPLICATION_JSON_VALUE},
+            produces={MediaType.APPLICATION_JSON_VALUE})
+    @ApiOperation(value="Criar conta.", produces="application/json")
+
+    public Conta criarConta(){
+        return contaService.criarConta();
     }
 
 }

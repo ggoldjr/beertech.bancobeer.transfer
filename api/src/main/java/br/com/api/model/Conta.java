@@ -25,7 +25,10 @@ public class Conta implements Serializable {
     @Min(value = 0)
     private Double saldo;
 
-    @OneToMany(mappedBy =  "conta")
+    @NotNull
+    private String hash;
+
+    @OneToMany(mappedBy =  "conta", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private List<Transacao> transacao;
 
