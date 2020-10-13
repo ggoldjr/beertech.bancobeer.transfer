@@ -10,4 +10,7 @@ import java.util.Optional;
 @Repository
 public interface  ContaRepository  extends JpaRepository<Conta, Long> {
     public Optional<Conta> findByHash(String hash);
+
+    @Query(value = "SELECT max(id) + 1 FROM Conta")
+    public Long max();
 }

@@ -4,6 +4,8 @@ import br.com.api.dto.TransacaoDto;
 import br.com.api.model.Conta;
 import br.com.api.model.Transacao;
 import br.com.api.repository.TransacaoRepository;
+import ch.qos.logback.core.net.SyslogOutputStream;
+import org.apache.tomcat.util.buf.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.api.repository.ContaRepository;
 import org.springframework.stereotype.Service;
@@ -71,9 +73,26 @@ public class ContaService {
     public Conta criarConta() {
         Conta newConta = new Conta();
         //cria um hash a partir do timestamp da criacao da conta
-        newConta.setHash(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         newConta.setSaldo(0d);
-        //Outro opção - UUID.randomUUID().toString()
+
+        //Cria o HASH da conta (ex.; 00052-8)
+        String newContaId = contaRepository.max().toString(); //Pega o próximo ID de conta
+        //Calculo do digito verificador
+        int soma = 0;
+        int fator = 2;
+        for (int i = newContaId.length(); i > 0; i--) {
+            soma += Integer.parseInt(String.valueOf(Integer.parseInt(newContaId.substring(i-1,i)) * fator));
+            fator++;
+        }
+        int digito = soma % 11;
+        if (digito == 10) {
+            digito = 0;
+        }
+        //Adiciona "zeros" a esquerda se necessario
+        newContaId = String.format("%1$5s", newContaId).replace(' ', '0'); // 00000 (conta com 5 digitos)
+        newContaId += "-" + digito; // CONTA = Id-DV (00025-3)
+        newConta.setHash(newContaId);
+
         return contaRepository.save(newConta);
     }
 }

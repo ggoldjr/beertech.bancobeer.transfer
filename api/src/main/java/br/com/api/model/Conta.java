@@ -32,8 +32,9 @@ public class Conta implements Serializable {
     @JsonIgnore
     private List<Transacao> transacao;
 
-    public Conta(Long id, Double saldo, List<Transacao> transacao) {
+    public Conta(Long id, String hash, Double saldo, List<Transacao> transacao) {
         this.id = id;
+        this.hash = hash;
         this.saldo = saldo;
         this.transacao = new ArrayList<>();
     }
